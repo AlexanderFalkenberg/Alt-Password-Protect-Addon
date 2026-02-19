@@ -1,10 +1,13 @@
 <?php namespace AltDesign\AltPasswordProtect\Http\Controllers;
 
-use Illuminate\Http\Request;
 use AltDesign\AltPasswordProtect\Helpers\Data;
-use Statamic\Auth\Protect\Protectors\Password\Guard;
-use Statamic\Auth\Protect\Protectors\Password\Controller as PasswordProtectController;
 use AltDesign\AltPasswordProtect\Protectors\CustomGuard;
+use Facades\Statamic\Version;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Statamic\Auth\Protect\Protectors\Password\Controller as PasswordProtectController;
+use Statamic\Auth\Protect\Protectors\Password\Guard;
+use Statamic\CP\PublishForm;
 use Statamic\Facades\Entry;
 
 /**
@@ -29,6 +32,15 @@ class AltController extends PasswordProtectController {
 
         $blueprint = $data->getBlueprint(true);
         $fields = $blueprint->fields()->addValues($data->all())->preProcess();
+
+        // Statamic >= V6
+        if(intval(Str::before(Version::get(), '.')) >= 6) {
+            return PublishForm::make($blueprint)
+                ->title('Alt Password Protect')
+                ->icon(config('alt-password-protect.alt_password_protect_icon'))
+                ->values($fields->values()->toArray())
+                ->submittingTo(cp_route('alt-password-protect.update'), 'POST');
+        }
 
         return view('alt-password-protect::index', [
             'blueprint' => $blueprint->toPublishArray(),
